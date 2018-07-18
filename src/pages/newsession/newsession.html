@@ -1,0 +1,25 @@
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>newsession</ion-title>
+    <ion-buttons end>
+      <button ion-button color="danger" (tap)="stopTracking()"><ion-icon name="hand"></ion-icon>Stop Tracking</button>
+    </ion-buttons>  
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+  <div #map id="map">
+
+  </div>
+  <ion-item *ngIf="!isTracking">
+    <ion-label color="primary" floating>Nom de la Session</ion-label>
+    <ion-input></ion-input>
+  </ion-item>
+  <!-- <button ion-button full color="danger" icon-left (tap)="stopTracking()">
+    <ion-icon name="hand"></ion-icon>
+    Stop Tracking
+  </button> -->
+</ion-content>

@@ -1,14 +1,49 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>
-      Ionic Blank
+    <ion-title center>
+      Mes sessions
     </ion-title>
   </ion-navbar>
 </ion-header>
-
+  
 <ion-content padding>
-  The world is your oyster.
-  <p>
-    If you get lost, the <a href="http://ionicframework.com/docs/v2">docs</a> will be your guide.
-  </p>
+  <ion-card *ngFor="let session of sessions" (tap)="openSessionPage(session.id)">
+    <ion-card-header>
+      {{ session.name }}
+    </ion-card-header>
+    <ion-card-content>
+      {{ session.created_at }}
+    </ion-card-content>
+  </ion-card>
+    
+    <ion-card (tap)="openSessionPage(1)">
+      <ion-card-header >
+        Session-1
+      </ion-card-header>
+      <ion-card-content>
+        18-05-2018
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header (tap)="openSessionPage(2)">
+        Session-1
+      </ion-card-header>
+      <ion-card-content>
+        18-05-2018
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header (tap)="openSessionPage(3)">
+        Session-1
+      </ion-card-header>
+      <ion-card-content>
+        18-05-2018
+      </ion-card-content>
+    </ion-card>
 </ion-content>
+
+<ion-footer>
+    <button ion-button full color="secondary" (tap)="startSession()">Start</button>
+</ion-footer>
