@@ -4,6 +4,7 @@ import { SQLite, SQLiteObject } from '@ionic-native/sqlite';
 import { SessionPage } from '../session/session';
 import { BarcodeScanner } from '@ionic-native/barcode-scanner';
 import { NewsessionPage } from '../newsession/newsession';
+import { LoadingController } from 'ionic-angular';
 
 @Component({
   selector: 'page-home',
@@ -13,13 +14,13 @@ export class HomePage {
 
   sessions = [];
   
-  constructor(public navCtrl: NavController, public sqlite: SQLite, public platform: Platform, private barcodeScanner: BarcodeScanner) {
-  }
-
-  ionViewWillEnter(){// Dés que l'on rentre dans la vue en éxécute le code
+  constructor(public navCtrl: NavController, public sqlite: SQLite, public platform: Platform, private barcodeScanner: BarcodeScanner, public loadingCtrl: LoadingController) {
     this.platform.ready().then(() => {// Permet de démarrer les codes si le device est prêt
       this.getSessions();
     })
+  }
+
+  ionViewWillEnter(){// Dés que l'on rentre dans la vue en éxécute le code
   }
 
   getSessions(){
@@ -39,8 +40,9 @@ export class HomePage {
   .catch(e => console.log('error DB connection',e));
   }
 
-  openSessionPage(sessionId) {// Permet d'afficher les informations chaque fois que l'on tape sur les cards 
-    this.navCtrl.push(SessionPage, {id:sessionId});
+  openSessionPage(sessionId: any, sessionName: any): void {// Permet d'afficher les informations chaque fois que l'on tape sur les cards 
+    this.presentLoading();
+    this.navCtrl.push(SessionPage, {id:sessionId, name:sessionName});
   }
 
   startSession() {
@@ -49,6 +51,14 @@ export class HomePage {
      }).catch(err => {
          console.log('Error', err);
      });
+    this.presentLoading();
   }
 
+  presentLoading() {
+    this.loadingCtrl.create({
+      content: 'Veuillez patientez...',
+      duration: 2500,
+      dismissOnPageChange: true
+    }).present();
+  }
 }

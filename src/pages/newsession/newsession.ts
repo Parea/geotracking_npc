@@ -24,20 +24,21 @@ export class NewsessionPage {
   map: any;
   lat: any;
   lng: any;
+  name: any;
   positionSubscription: Subscription;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, public sqlite: SQLite, public platform: Platform, private geolocation: Geolocation, public loadingCtrl: LoadingController) {
     this.platform.ready().then(() => {// Permet de démarrer les codes si le device est prêt
       this.geolocation.getCurrentPosition().then((position) => {
         this.latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-          console.log('GetCurrent :' + position); 
-          this.lat = position.coords.latitude;
-          this.lng = position.coords.longitude;
-          this.addMarker(this.latlng);
+        console.log('GetCurrent :' + position);
+        this.lat = position.coords.latitude;
+        this.lng = position.coords.longitude;
+        this.addMarker(this.latlng);
 
-          this.insertRecord();
-          this.loadMap();
-          this.startTracking();
+        this.insertRecord();
+        this.loadMap();
+        this.startTracking();
       }).catch((error) => {
         console.log('Error getting location', error);
       });
@@ -55,71 +56,118 @@ export class NewsessionPage {
       streetViewControl: false,
       fullscreenControl: false
     }
-    
+
     this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
     console.log('Map is ready!');
   }
 
-  startTracking() {
-    this.isTracking = true;
-    this.trackedRoute = [];
-    let watchOption = {
-      frequency: 1000,
-      enableHighAccuracy: true,
-      timeout: 3000
-    }
- 
-    this.positionSubscription = this.geolocation.watchPosition(watchOption).pipe(filter((p) => p.coords !== undefined)).subscribe(data => {
-      
-      this.trackedRoute.push({ lat: data.coords.latitude, lng: data.coords.longitude });
-      this.latlng = new LatLng(data.coords.latitude, data.coords.longitude);
-      this.redrawPath(this.trackedRoute);
-      console.log('records');
-      this.insertRecord();
-      this.addMarker(this.latlng);
-    });
-      console.log('startTracking: this.positionSubscription ', this.positionSubscription );
-  }
-
-  insertRecord() {
+  loadHistoryRoutes() {
     this.sqlite.create({
       name: 'data.db',
       location: 'default'
     })
-    .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
-      let date = Date();
-      let insertRecord = "INSERT INTO `records` (lat, lng, created_at) VALUES ('"+this.lat+"', '"+this.lng+"', '"+date+"');";
-      
-      db.executeSql(insertRecord, {})
-      .then((data) => {
-        console.log('nouveau record enregistré', data);
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
+        db.executeSql('SELECT * FROM records WHERE id =?', {})
+          .then((data) => {
+            this.previousTracks = data;
+          })
       })
-      .catch(e => console.error('error insert record',e));
+    }
+    
+    startTracking() {
+      this.isTracking = true;
+      this.trackedRoute = [];
+      let watchOption = {
+        frequency: 1000,
+        enableHighAccuracy: true,
+        timeout: 3000
+      }
+      
+      this.positionSubscription = this.geolocation.watchPosition(watchOption).pipe(filter((p) => p.coords !== undefined)).subscribe(data => {
+        
+        this.trackedRoute.push({ lat: data.coords.latitude, lng: data.coords.longitude });
+        this.latlng = new LatLng(data.coords.latitude, data.coords.longitude);
+        this.redrawPath(this.trackedRoute);
+        console.log('records');
+        this.insertRecord();
+        this.addMarker(this.latlng);
+      });
+      console.log('startTracking: this.positionSubscription ', this.positionSubscription);
+    }
+    
+    stopTracking() {
+      let newRoute = { finished: new Date().getTime(), path: this.trackedRoute };
+      this.previousTracks.push(newRoute);
+  
+      this.isTracking = false;
+      this.positionSubscription.unsubscribe();
+      this.presentLoading();
+  
+      console.log('stopTracking: this.positionSubscription ', this.positionSubscription);
+    }
+    
+    insertRecord() {
+      this.sqlite.create({
+      name: 'data.db',
+      location: 'default'
     })
-    .catch(e => console.log('error DB connection',e));
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
+        let date = Date();
+        let insertRecord = "INSERT INTO `records` (lat, lng, created_at) VALUES ('" + this.lat + "', '" + this.lng + "', '" + date + "');";
+        console.log('insertrecord: ', insertRecord);
+        db.executeSql(insertRecord, {})
+          .then((data) => {
+            console.log('nouveau record enregistré', data);
+          })
+          .catch(e => console.error('error insert record', e));
+      })
+      .catch(e => console.log('error DB connection', e));
+  }
+
+  insertSession() {
+    this.sqlite.create({
+      name: 'data.db',
+      location: 'default'
+    })
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
+        let date = Date();
+        let insertSession = "INSERT INTO `sessions` (name, created_at) VALUES ('" + this.name + "', '" + date + "');";
+        
+        console.log('insertSession: ', insertSession);
+
+        db.executeSql(insertSession, {})
+          .then((data) => {
+            this.name = data;
+            console.log('nouvel session enregistré', data);
+          })
+          .catch(e => console.error('error insertSession', e));
+      })
+      .catch(e => console.log('error DB connection', e));
+
+      this.navCtrl.push(HomePage);
   }
 
 
-  addMarker(latlng){
- 
+  addMarker(latlng) {
+
     let marker = new google.maps.Marker({
       map: this.map,
       animation: google.maps.Animation.DROP,
       position: latlng
     });
-   
-    let content = "<h4>Début!</h4>";         
-   
+
+    let content = "<h4>Début!</h4>";
+
     this.addInfoWindow(marker, content);
-   
+
   }
 
-  addInfoWindow(marker, content){
- 
+  addInfoWindow(marker, content) {
+
     let infoWindow = new google.maps.InfoWindow({
       content: content
     });
-   
+
     google.maps.event.addListener(marker, 'click', () => {
       infoWindow.open(this.map, marker);
     });
@@ -129,7 +177,7 @@ export class NewsessionPage {
     if (this.currentMapTrack) {
       this.currentMapTrack.setMap(null);
     }
- 
+
     if (path.length > 1) {
       this.currentMapTrack = new google.maps.Polyline({
         path: path,
@@ -142,22 +190,16 @@ export class NewsessionPage {
     }
   }
 
-  stopTracking() {
-    console.log('stopTracking: this.positionSubscription ', this.positionSubscription );
-    
-    this.isTracking = false;
-    this.positionSubscription.unsubscribe();
-    this.presentLoading();
-  }
 
   presentLoading() {
     this.loadingCtrl.create({
       content: 'Veuillez patientez...',
-      duration: 3000,
+      duration: 2500,
       dismissOnPageChange: true
     }).present();
   }
-  // showHistoryRoute(route) {
-  //   this.redrawPath(route);
-  // }
+
+  showHistoryRoute(route) {
+    this.redrawPath(route);
+  }
 }

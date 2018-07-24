@@ -86,8 +86,9 @@
         <variable name="GEOLOCATION_USAGE_DESCRIPTION" value="To locate you" />
     </plugin>
     <plugin name="phonegap-plugin-barcodescanner" spec="^8.0.0" />
-    <engine name="android" spec="^7.0.0" />
     <allow-navigation href="http://192.168.10.103:8100" />
     <allow-navigation href="http://192.168.8.105:8100" />
     <allow-navigation href="http://192.168.8.102:8100" />
+    <allow-navigation href="http://192.168.1.66:8100" />
+    <engine name="android" spec="^7.0.0" />
 </widget>
