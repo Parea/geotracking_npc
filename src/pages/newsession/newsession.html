@@ -3,8 +3,9 @@
   <ion-navbar>
     <ion-title>newsession</ion-title>
     <ion-buttons end>
-      <button ion-button color="danger" (tap)="stopTracking()"><ion-icon name="hand"></ion-icon>Stop Tracking</button>
-    </ion-buttons>  
+      <button ion-button color="danger" (tap)="stopTracking()">
+        <ion-icon name="hand"></ion-icon>Stop Tracking</button>
+    </ion-buttons>
   </ion-navbar>
 
 </ion-header>
@@ -15,21 +16,10 @@
 
   </div>
   <ion-item *ngIf="!isTracking">
-    <ion-label color="primary" floating >Nom de la Session</ion-label>
+    <ion-label color="primary" floating>Nom de la Session</ion-label>
     <ion-input [(ngModel)]="name" name="name"></ion-input>
-    <!-- <ion-buttons end>
-      <button ion-button color="success" (tap)="insertSession()">Validate session</button>
-    </ion-buttons> -->
   </ion-item>
-
-  <ion-footer>
-    <button ion-button full color="secondary" (tap)="insertSession()">Validate session</button>
-  </ion-footer>
-  <!-- <ion-list>
-    <ion-list-header>Previous Tracks</ion-list-header>
-    <ion-item *ngFor="let route of previousTracks">
-      {{ route.finished | date:"dd.MM.yyyy" }}, {{ route.path.length }} waypoints
-      <button ion-button clear item-end (click)="showHistoryRoute(route.path)">View route</button>
-    </ion-item>
-  </ion-list> -->
+  <ion-buttons>
+    <button ion-button color="success" (tap)="insertSession()">Validate session</button>
+  </ion-buttons>
 </ion-content>

@@ -1,19 +1,16 @@
 <ion-header>
 
   <ion-navbar>
-    <ion-title>session {{ sessionId }}</ion-title>
+    <ion-title>{{ sessionName }}</ion-title>
   </ion-navbar>
 
 </ion-header>
-  <h2>{{ sessionName }}</h2>
-  <ion-list >
-    <ion-item *ngFor="let record of records">
-      <ion-list>{{ record.id }}</ion-list>
-      <ion-list>{{ record.session_id }}</ion-list>
-      <ion-list>{{ record.lat }}</ion-list>
-      <ion-list>{{ record.lng }}</ion-list>
-    </ion-item>
-  </ion-list>
-<ion-content padding>
 
+<ion-content padding>
+  <ion-item *ngFor="let record of records">
+    <!-- <ion-list>{{ record.id }}</ion-list>
+      <ion-list>{{ record.session_id }}</ion-list> -->
+    <ion-list>{{ record.lat }}</ion-list>
+    <ion-list>{{ record.lng }}</ion-list>
+  </ion-item>
 </ion-content>

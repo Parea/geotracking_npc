@@ -29,20 +29,21 @@ export class HomePage {
     location: 'default'
   })
   .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
-    db.executeSql('SELECT * FROM sessions', {})
+    db.executeSql('SELECT * FROM sessions ORDER BY id DESC', {})
     .then((data) => {
       for(let i = 0; i < data.rows.length; i++) {// récuperer tous les tableaux dans la table sessions
         this.sessions.push(data.rows.item(i));
       }
+      console.log('sessions: ', this.sessions);
     })
-    .catch(e => console.error('error select sessions',e));
+    .catch(e => console.error('error select sessions: ',e));
   })
   .catch(e => console.log('error DB connection',e));
   }
 
   openSessionPage(sessionId: any, sessionName: any): void {// Permet d'afficher les informations chaque fois que l'on tape sur les cards 
     this.presentLoading();
-    this.navCtrl.push(SessionPage, {id:sessionId, name:sessionName});
+    this.navCtrl.push(SessionPage, {id:sessionId, name:sessionName});//Permet de transferer l'ID et le nom en paramètre pour la SessionPage
   }
 
   startSession() {

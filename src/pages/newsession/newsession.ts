@@ -16,6 +16,7 @@ declare var google;
 })
 export class NewsessionPage {
   @ViewChild('map') mapElement: ElementRef;
+
   currentMapTrack = null;
   isTracking = false;
   trackedRoute = [];
@@ -25,18 +26,18 @@ export class NewsessionPage {
   lat: any;
   lng: any;
   name: any;
+  sessionId: 1;
   positionSubscription: Subscription;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, public sqlite: SQLite, public platform: Platform, private geolocation: Geolocation, public loadingCtrl: LoadingController) {
     this.platform.ready().then(() => {// Permet de démarrer les codes si le device est prêt
       this.geolocation.getCurrentPosition().then((position) => {
         this.latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        console.log('GetCurrent :' + position);
         this.lat = position.coords.latitude;
         this.lng = position.coords.longitude;
         this.addMarker(this.latlng);
 
-        this.insertRecord();
+        //this.insertRecord(this.sessionId);
         this.loadMap();
         this.startTracking();
       }).catch((error) => {
@@ -45,7 +46,7 @@ export class NewsessionPage {
     });
   }
 
-  loadMap() {
+  loadMap() {//Charge la map au moment du lancement 
     let mapOptions = {
       center: this.latlng,
       zoom: 18,
@@ -61,70 +62,75 @@ export class NewsessionPage {
     console.log('Map is ready!');
   }
 
-  loadHistoryRoutes() {
+  loadHistoryRoutes() {//historique du parcours fait
     this.sqlite.create({
       name: 'data.db',
       location: 'default'
     })
       .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
-        db.executeSql('SELECT * FROM records WHERE id =?', {})
+        db.executeSql('SELECT * FROM records', {})
           .then((data) => {
             this.previousTracks = data;
+
+            console.log('data: ', data);
           })
       })
+  }
+
+  startTracking() {//demarre le tracking
+    this.isTracking = true;
+    this.trackedRoute = [];
+
+    let watchOption = {
+      frequency: 1000,
+      enableHighAccuracy: true,
+      timeout: 3000
     }
-    
-    startTracking() {
-      this.isTracking = true;
-      this.trackedRoute = [];
-      let watchOption = {
-        frequency: 1000,
-        enableHighAccuracy: true,
-        timeout: 3000
-      }
-      
-      this.positionSubscription = this.geolocation.watchPosition(watchOption).pipe(filter((p) => p.coords !== undefined)).subscribe(data => {
-        
-        this.trackedRoute.push({ lat: data.coords.latitude, lng: data.coords.longitude });
-        this.latlng = new LatLng(data.coords.latitude, data.coords.longitude);
-        this.redrawPath(this.trackedRoute);
-        console.log('records');
-        this.insertRecord();
-        this.addMarker(this.latlng);
-      });
-      console.log('startTracking: this.positionSubscription ', this.positionSubscription);
-    }
-    
-    stopTracking() {
-      let newRoute = { finished: new Date().getTime(), path: this.trackedRoute };
-      this.previousTracks.push(newRoute);
-  
-      this.isTracking = false;
-      this.positionSubscription.unsubscribe();
-      this.presentLoading();
-  
-      console.log('stopTracking: this.positionSubscription ', this.positionSubscription);
-    }
-    
-    insertRecord() {
-      this.sqlite.create({
+
+    this.positionSubscription = this.geolocation.watchPosition(watchOption).pipe(filter((p) => p.coords !== undefined)).subscribe(data => {
+
+      this.trackedRoute.push({ lat: data.coords.latitude, lng: data.coords.longitude });
+      this.latlng = new LatLng(data.coords.latitude, data.coords.longitude);
+      this.redrawPath(this.trackedRoute);
+      //this.insertRecord();
+      this.addMarker(this.latlng);
+
+    });
+    console.log('startTracking: this.positionSubscription ', this.positionSubscription);
+  }
+
+  stopTracking() {//Arrête tracking
+    let newRoute = { finished: new Date().getTime(), path: this.trackedRoute };
+    this.previousTracks.push(newRoute);
+
+    this.isTracking = false;
+    this.positionSubscription.unsubscribe();
+    this.presentLoading();
+
+    console.log('stopTracking: this.positionSubscription ', this.positionSubscription);
+  }
+
+  insertRecord() {
+    this.sqlite.create({//validation et insertion lat, lng en cours dans la base de données
       name: 'data.db',
       location: 'default'
     })
       .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
         let date = Date();
         let insertRecord = "INSERT INTO `records` (lat, lng, created_at) VALUES ('" + this.lat + "', '" + this.lng + "', '" + date + "');";
+        
         console.log('insertrecord: ', insertRecord);
+
         db.executeSql(insertRecord, {})
           .then((data) => {
-            console.log('nouveau record enregistré', data);
+            console.log('nouveau record enregistré');
           })
-          .catch(e => console.error('error insert record', e));
+          .catch(e => console.error('error insertRecord: ', e));
       })
       .catch(e => console.log('error DB connection', e));
   }
 
-  insertSession() {
+  insertSession() {//validation et insertion de la session en cours dans la base de données
     this.sqlite.create({
       name: 'data.db',
       location: 'default'
@@ -132,23 +138,40 @@ export class NewsessionPage {
       .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
         let date = Date();
         let insertSession = "INSERT INTO `sessions` (name, created_at) VALUES ('" + this.name + "', '" + date + "');";
-        
+
         console.log('insertSession: ', insertSession);
 
         db.executeSql(insertSession, {})
           .then((data) => {
             this.name = data;
-            console.log('nouvel session enregistré', data);
+            console.log('nouvel session enregistré');
           })
-          .catch(e => console.error('error insertSession', e));
+          .catch(e => console.error('error insertSession: ', e));
       })
       .catch(e => console.log('error DB connection', e));
-
-      this.navCtrl.push(HomePage);
+    this.insertRecord();
+    this.updateRecord(this.sessionId);
+    this.navCtrl.push(HomePage);
   }
 
+  updateRecord(sessionId){
+    this.sqlite.create({
+      name: 'data.db',
+      location: 'default'
+    })
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
+        db.executeSql('UPDATE `records` SET session_id = ?', {sessionId})
+          // .then((data) => {// récuperer tous les tableaux dans la table sessions
+          //   this.sessionId = data;
+            
+          // })
+          // .catch(e => console.error('error update session_id: ', e));
+          console.log('update session_id: ', this.sessionId);
+      })
+      .catch(e => console.log('error DB connection', e));
+  }
 
-  addMarker(latlng) {
+  addMarker(latlng) {//ajoute un marker
 
     let marker = new google.maps.Marker({
       map: this.map,
@@ -162,7 +185,7 @@ export class NewsessionPage {
 
   }
 
-  addInfoWindow(marker, content) {
+  addInfoWindow(marker, content) {//information afficher au moment du tap sur le marker
 
     let infoWindow = new google.maps.InfoWindow({
       content: content
@@ -173,7 +196,7 @@ export class NewsessionPage {
     });
   }
 
-  redrawPath(path) {
+  redrawPath(path) {//Trace une ligne pour faire le chemin qui aétait parcouru
     if (this.currentMapTrack) {
       this.currentMapTrack.setMap(null);
     }
@@ -191,7 +214,7 @@ export class NewsessionPage {
   }
 
 
-  presentLoading() {
+  presentLoading() {//affiche le loading
     this.loadingCtrl.create({
       content: 'Veuillez patientez...',
       duration: 2500,

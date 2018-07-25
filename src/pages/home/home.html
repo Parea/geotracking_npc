@@ -5,9 +5,9 @@
     </ion-title>
   </ion-navbar>
 </ion-header>
-  
+
 <ion-content padding>
-  <ion-card *ngFor="let session of sessions" (click)="openSessionPage(session.id)">
+  <ion-card *ngFor="let session of sessions" (click)="openSessionPage(session.id, session.name)">
     <ion-card-header>
       {{ session.name }}
     </ion-card-header>
@@ -15,6 +15,7 @@
       {{ session.created_at | date:"dd.MM.yyyy"}}
     </ion-card-content>
   </ion-card>
-<ion-footer>
+  <ion-footer>
     <button ion-button full color="secondary" (tap)="startSession()">Start</button>
-</ion-footer>
+  </ion-footer>
+</ion-content>

@@ -23,6 +23,7 @@ export class SessionPage {
 
   constructor(public navCtrl: NavController, public navParams: NavParams, public sqlite: SQLite, public platform: Platform, private geolocation: Geolocation) {
     this.platform.ready().then(() => {// Permet de démarrer les codes si le device est prêt
+      this.getRecord();
       this.sessionId = this.navParams.get('id');
       this.sessionName = this.navParams.get('name');
     })
@@ -32,18 +33,22 @@ export class SessionPage {
     console.log('ionViewDidLoad SessionPage');
   }
 
-  getRecord(sessionId){
+  getRecord() {
     this.sqlite.create({
-    name: 'data.db',
-    location: 'default'
-  })
-  .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
-    db.executeSql('SELECT * FROM records WHERE session_id ='+ this.sessionId , {})
-    .then((data) => {// récuperer tous les tableaux dans la table sessions
-        this.records = data;
+      name: 'data.db',
+      location: 'default'
     })
-    .catch(e => console.error('error select records',e));
-  })
-  .catch(e => console.log('error DB connection',e));
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
+        db.executeSql('SELECT * FROM records', {})
+          .then((data) => {// récuperer tous les tableaux dans la table sessions
+            for (let i = 0; i < data.rows.length; i++) {
+              this.records.push(data.rows.item(i));
+            }
+            console.log('records: ', this.records);
+          })
+          .catch(e => console.error('error select records: ', e));
+      })
+      .catch(e => console.log('error DB connection', e));
   }
+
 }
