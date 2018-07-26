@@ -51,7 +51,7 @@ export class WelcomePage {
   }
   
   createTableRecords() {// Création de la table records
-    this.database.executeSql('CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER DEFAULT 0, lat TEXT, lng TEXT, created_at TEXT)', {})
+    this.database.executeSql('CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER DEFAULT 0, save INTEGER DEFAULT 0, lat TEXT, lng TEXT, created_at TEXT, start TEXT, end TEXT)', {})
     .then(() => {
       console.log('Table records created great!');
       this.navCtrl.setRoot(HomePage);// Permet d'accéder directement sur la Page home de l'appli

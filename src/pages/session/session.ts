@@ -39,7 +39,7 @@ export class SessionPage {
       location: 'default'
     })
       .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
-        db.executeSql('SELECT * FROM records', {})
+        db.executeSql('SELECT * FROM records WHERE session_id = ?', [this.sessionId = this.navParams.get('id')])
           .then((data) => {// récuperer tous les tableaux dans la table sessions
             for (let i = 0; i < data.rows.length; i++) {
               this.records.push(data.rows.item(i));

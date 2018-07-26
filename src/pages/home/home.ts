@@ -58,7 +58,7 @@ export class HomePage {
   presentLoading() {
     this.loadingCtrl.create({
       content: 'Veuillez patientez...',
-      duration: 2500,
+      duration: 3500,
       dismissOnPageChange: true
     }).present();
   }

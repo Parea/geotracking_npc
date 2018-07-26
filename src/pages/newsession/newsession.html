@@ -1,10 +1,10 @@
 <ion-header>
 
   <ion-navbar>
-    <ion-title>newsession</ion-title>
+    <ion-title>New Run</ion-title>
     <ion-buttons end>
-      <button ion-button color="danger" (tap)="stopTracking()">
-        <ion-icon name="hand"></ion-icon>Stop Tracking</button>
+      <button ion-button color="secondary" (tap)="stopTracking()">
+        <ion-icon name="hand"></ion-icon>Save Run</button>
     </ion-buttons>
   </ion-navbar>
 
@@ -15,11 +15,18 @@
   <div #map id="map">
 
   </div>
-  <ion-item *ngIf="!isTracking">
-    <ion-label color="primary" floating>Nom de la Session</ion-label>
-    <ion-input [(ngModel)]="name" name="name"></ion-input>
-  </ion-item>
-  <ion-buttons>
-    <button ion-button color="success" (tap)="insertSession()">Validate session</button>
-  </ion-buttons>
+
+  <form (submit)="insertSession()" *ngIf="!isTracking">
+    <ion-item>
+      <ion-label color="primary" floating>Name run</ion-label>
+      <ion-input [(ngModel)]="name" name="name"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label color="primary" floating>Id run</ion-label>
+      <ion-input [(ngModel)]="id" name="id"></ion-input>
+    </ion-item>
+    <button ion-button block color="secondary" type="submit"><ion-icon name="walk"></ion-icon> Validate</button>
+  </form>
+
+  <button ion-button block color="danger" (tap)="deleteData()" *ngIf="isTracking"><ion-icon name="close-circle"></ion-icon> Cancel run</button>
 </ion-content>

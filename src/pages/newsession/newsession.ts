@@ -21,12 +21,13 @@ export class NewsessionPage {
   isTracking = false;
   trackedRoute = [];
   previousTracks = [];
+  records = [];
   latlng: LatLng;
   map: any;
   lat: any;
   lng: any;
   name: any;
-  sessionId: 1;
+  id: any;
   positionSubscription: Subscription;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, public sqlite: SQLite, public platform: Platform, private geolocation: Geolocation, public loadingCtrl: LoadingController) {
@@ -37,7 +38,7 @@ export class NewsessionPage {
         this.lng = position.coords.longitude;
         this.addMarker(this.latlng);
 
-        //this.insertRecord(this.sessionId);
+        this.StartRecord();
         this.loadMap();
         this.startTracking();
       }).catch((error) => {
@@ -92,7 +93,7 @@ export class NewsessionPage {
       this.trackedRoute.push({ lat: data.coords.latitude, lng: data.coords.longitude });
       this.latlng = new LatLng(data.coords.latitude, data.coords.longitude);
       this.redrawPath(this.trackedRoute);
-      //this.insertRecord();
+      this.insertRecord();
       this.addMarker(this.latlng);
 
     });
@@ -105,6 +106,7 @@ export class NewsessionPage {
 
     this.isTracking = false;
     this.positionSubscription.unsubscribe();
+    this.EndRecord();
     this.presentLoading();
 
     console.log('stopTracking: this.positionSubscription ', this.positionSubscription);
@@ -122,10 +124,50 @@ export class NewsessionPage {
         console.log('insertrecord: ', insertRecord);
 
         db.executeSql(insertRecord, {})
-          .then((data) => {
+          .then(() => {
             console.log('nouveau record enregistré');
           })
           .catch(e => console.error('error insertRecord: ', e));
+      })
+      .catch(e => console.log('error DB connection', e));
+  }
+
+  StartRecord() {
+    this.sqlite.create({//validation et insertion lat, lng en cours dans la base de données
+      name: 'data.db',
+      location: 'default'
+    })
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
+        let date = Date();
+        let StartRecord = "INSERT INTO `records` (lat, lng, start) VALUES ('" + this.lat + "', '" + this.lng + "', '" + date + "');";
+        
+        console.log('StartRecord: ', StartRecord);
+
+        db.executeSql(StartRecord, {})
+          .then(() => {
+            console.log('début record enregistré');
+          })
+          .catch(e => console.error('error StartRecord: ', e));
+      })
+      .catch(e => console.log('error DB connection', e));
+  }
+
+  EndRecord() {
+    this.sqlite.create({//validation et insertion lat, lng en cours dans la base de données
+      name: 'data.db',
+      location: 'default'
+    })
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
+        let date = Date();
+        let EndRecord = "INSERT INTO `records` (lat, lng, end) VALUES ('" + this.lat + "', '" + this.lng + "', '" + date + "');";
+        
+        console.log('EndRecord: ', EndRecord);
+
+        db.executeSql(EndRecord, {})
+          .then(() => {
+            console.log('fin record enregistré');
+          })
+          .catch(e => console.error('error EndRecord: ', e));
       })
       .catch(e => console.log('error DB connection', e));
   }
@@ -137,40 +179,67 @@ export class NewsessionPage {
     })
       .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
         let date = Date();
-        let insertSession = "INSERT INTO `sessions` (name, created_at) VALUES ('" + this.name + "', '" + date + "');";
-
+        let insertSession = "INSERT INTO `sessions` (id, name, created_at) VALUES ('" + this.id + "','" + this.name + "','" + date + "');";
+        
         console.log('insertSession: ', insertSession);
 
         db.executeSql(insertSession, {})
           .then((data) => {
+            this.id = data;
             this.name = data;
             console.log('nouvel session enregistré');
+            console.log('sessionId: ',this.id);
           })
           .catch(e => console.error('error insertSession: ', e));
       })
       .catch(e => console.log('error DB connection', e));
     this.insertRecord();
-    this.updateRecord(this.sessionId);
+    this.updateRecord();
     this.navCtrl.push(HomePage);
   }
 
-  updateRecord(sessionId){
+  updateRecord(): void{
     this.sqlite.create({
       name: 'data.db',
       location: 'default'
     })
-      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer ou bien bien créer la base
-        db.executeSql('UPDATE `records` SET session_id = ?', {sessionId})
-          // .then((data) => {// récuperer tous les tableaux dans la table sessions
-          //   this.sessionId = data;
-            
-          // })
-          // .catch(e => console.error('error update session_id: ', e));
-          console.log('update session_id: ', this.sessionId);
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer
+        //let sessionId = this.navParams.get('id')
+        let updateSessionId ="UPDATE records SET session_id = lower('" + this.id + "'), save = lower(1)";
+        
+        //console.log('updateSessionId', updateSessionId);
+
+        db.executeSql(updateSessionId, {})
+          .then((data) => {// récuperer tous les tableaux dans la table sessions
+            console.log("update session_id:",updateSessionId);
+          })
+        .catch(e => console.error('error update session_id: ', e));
       })
       .catch(e => console.log('error DB connection', e));
   }
 
+  deleteData() {
+    this.sqlite.create({
+      name: 'data.db',
+      location: 'default'
+    })
+      .then((db: SQLiteObject) => {// Permet de vérifier si la base de données est créer
+        //let sessionId = this.navParams.get('id')
+        let deleteRecord ="DELETE FROM records WHERE save = 0";
+        
+        //console.log('updateSessionId', updateSessionId);
+
+        db.executeSql(deleteRecord, {})
+          .then((data) => {// récuperer tous les tableaux dans la table sessions
+            console.log("delete records:",deleteRecord);
+          })
+        .catch(e => console.error('error update session_id: ', e));
+      })
+      .catch(e => console.log('error DB connection', e));
+      this.stopTracking();
+      this.navCtrl.push(HomePage);
+  }
+  
   addMarker(latlng) {//ajoute un marker
 
     let marker = new google.maps.Marker({
@@ -179,7 +248,7 @@ export class NewsessionPage {
       position: latlng
     });
 
-    let content = "<h4>Début!</h4>";
+    let content = "<p>"+this.latlng+"</p>";
 
     this.addInfoWindow(marker, content);
 
@@ -224,5 +293,9 @@ export class NewsessionPage {
 
   showHistoryRoute(route) {
     this.redrawPath(route);
+  }
+
+  setHours(){
+
   }
 }
