@@ -2,7 +2,6 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 import { NavController, NavParams, Platform } from 'ionic-angular';
 import { Geolocation } from '@ionic-native/geolocation';
 import { SQLite, SQLiteObject } from '@ionic-native/sqlite';
-import { LatLng } from '@ionic-native/google-maps';
 
 /**
  * Generated class for the SessionPage page.
@@ -20,6 +19,8 @@ export class SessionPage {
   sessionId: 0;
   sessionName: any;
   records = [];
+  start: any;
+  end: any;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, public sqlite: SQLite, public platform: Platform, private geolocation: Geolocation) {
     this.platform.ready().then(() => {// Permet de démarrer les codes si le device est prêt
@@ -51,4 +52,16 @@ export class SessionPage {
       .catch(e => console.log('error DB connection', e));
   }
 
+  setHours(moment: any) {
+    // let diff = moment(this.end, 'H:m').diff(moment(this.start, 'H:m'))
+
+    // let d = moment.durat(diff);
+    // let totaltime = Math.floor(d.asHours()) + "heures" + moment.utc(diff).format(":mm") + "minutes";
+    // console.log('setHours: ', totaltime);
+
+    let current = new Date();
+    let Start = current.setHours(this.start(":")[0], this.start(":")[1], 0);
+    let End = current.setHours(this.end(":")[0], this.end(":")[1], 0);
+    console.log(Start, End)
+  }
 }

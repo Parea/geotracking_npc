@@ -12,7 +12,14 @@
       <ion-list>{{ record.session_id }}</ion-list> -->
     <ion-list>{{ record.lat }}</ion-list>
     <ion-list>{{ record.lng }}</ion-list>
-    <ion-list>{{ record.start | date:"dd.MM.yyyy 	HH:mm:ss"}}</ion-list>
-    <ion-list>{{ record.end | date:"dd.MM.yyyy 	HH:mm:ss"}}</ion-list>
+    <!-- <ion-list no-lines>
+      <ion-avatar item-left>
+        <ion-icon name="timer"></ion-icon>
+      </ion-avatar>
+      <h2>{{ setHours }}</h2>
+    </ion-list> -->
   </ion-item>
+
+  <button ion-button color="secondary" (tap)="setHours()">
+    <ion-icon name="timer"></ion-icon>Time your run</button>
 </ion-content>
